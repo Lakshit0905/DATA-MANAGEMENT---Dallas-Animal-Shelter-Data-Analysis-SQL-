@@ -1,0 +1,476 @@
+CREATE AND INSERT STATEMENT::
+
+CREATE TABLE project2_temporary_table(
+    animal_id                VARCHAR2(200 BYTE),
+    animal_type              VARCHAR2(200 BYTE),
+    animal_breed             VARCHAR2(200 BYTE),
+    kennel_number            VARCHAR2(200 BYTE),
+    kennel_status            VARCHAR2(200 BYTE),
+    activity_number          VARCHAR2(200 BYTE),
+    activity_sequence        VARCHAR2(200 BYTE),
+    source_id                VARCHAR2(200 BYTE),
+    census_tract             VARCHAR2(200 BYTE),
+    council_district         VARCHAR2(200 BYTE),
+    intake_type              VARCHAR2(200 BYTE),
+    intake_subtype           VARCHAR2(200 BYTE),
+    reason                   VARCHAR2(200 BYTE),
+    staff_id                 VARCHAR2(200 BYTE),
+    intake_date              VARCHAR2(200 BYTE),
+    intake_time              VARCHAR2(200 BYTE),
+    due_out                  VARCHAR2(200 BYTE),
+    intake_condition         VARCHAR2(200 BYTE),
+    hold_request             VARCHAR2(200 BYTE),
+    outcome_type             VARCHAR2(200 BYTE),
+    outcome_subtype          VARCHAR2(200 BYTE),
+    outcome_date             VARCHAR2(200 BYTE),
+    outcome_time             VARCHAR2(200 BYTE),
+    receipt_number           VARCHAR2(200 BYTE),
+    impound_number           VARCHAR2(200 BYTE),
+    outcome_condition        VARCHAR2(200 BYTE),
+    chip_status              VARCHAR2(200 BYTE),
+    animal_origin            VARCHAR2(200 BYTE),
+    additional_information   VARCHAR2(200 BYTE)
+);
+commit;
+
+CREATE TABLE project2_source_data (
+    animal_id                VARCHAR2(200 BYTE),
+    animal_type              VARCHAR2(200 BYTE),
+    animal_breed             VARCHAR2(200 BYTE),
+    kennel_number            VARCHAR2(200 BYTE),
+    kennel_status            VARCHAR2(200 BYTE),
+    activity_number          VARCHAR2(200 BYTE),
+    activity_sequence        NUMBER(38, 0),
+    source_id                VARCHAR2(200 BYTE),
+    census_tract             VARCHAR2(200 BYTE),
+    council_district         VARCHAR2(200 BYTE),
+    intake_type              VARCHAR2(200 BYTE),
+    intake_subtype           VARCHAR2(200 BYTE),
+    reason                   VARCHAR2(200 BYTE),
+    staff_id                 VARCHAR2(200 BYTE),
+    intake_date              DATE,
+    intake_time              VARCHAR2(200 BYTE),
+    due_out                  DATE,
+    intake_condition         VARCHAR2(200 BYTE),
+    hold_request             VARCHAR2(200 BYTE),
+    outcome_type             VARCHAR2(200 BYTE),
+    outcome_subtype          VARCHAR2(200 BYTE),
+    outcome_date             DATE,
+    outcome_time             VARCHAR2(200 BYTE),
+    receipt_number           VARCHAR2(200 BYTE),
+    impound_number           VARCHAR2(200 BYTE),
+    outcome_condition        VARCHAR2(200 BYTE),
+    chip_status              VARCHAR2(200 BYTE),
+    animal_origin            VARCHAR2(200 BYTE),
+    additional_information   VARCHAR2(200 BYTE)
+);
+commit;
+
+
+CREATE TABLE ANIMAL (
+    animal_id      VARCHAR2(200 BYTE),
+    animal_type    VARCHAR2(200 BYTE),
+    animal_breed   VARCHAR2(200 BYTE),
+    CONSTRAINT primarykeyanimal PRIMARY KEY ( animal_id )
+);
+commit;
+
+
+CREATE TABLE impound_data_project2(
+    impound_number          VARCHAR2(200 BYTE),
+    animal_id               VARCHAR2(200 BYTE),
+    kennel_number           VARCHAR2(200 BYTE),
+    kennel_status           VARCHAR2(200 BYTE),
+    activity_number         VARCHAR2(200 BYTE),
+    activity_sequence       VARCHAR2(200 BYTE),
+    source_id               VARCHAR2(200 BYTE),
+    census_tract            VARCHAR2(200 BYTE),
+    council_district        VARCHAR2(200 BYTE),
+    intake_type             VARCHAR2(200 BYTE),
+    intake_subtype          VARCHAR2(200 BYTE),
+    reason                  VARCHAR2(200 BYTE),
+    staff_id                VARCHAR2(200 BYTE),
+    intake_date             DATE,
+    intake_time             VARCHAR2(200 BYTE),
+    due_out                 DATE,
+    intake_condition        VARCHAR2(200 BYTE),
+    hold_request            VARCHAR2(200 BYTE),
+    outcome_type            VARCHAR2(200 BYTE),
+    outcome_subtype         VARCHAR2(200 BYTE),
+    outcome_date            DATE,
+    outcome_time            VARCHAR2(200 BYTE),
+    receipt_number          VARCHAR2(200 BYTE),
+    outcome_condition       VARCHAR2(200 BYTE),
+    chip_status             VARCHAR2(200 BYTE),
+    animal_origin           VARCHAR2(200 BYTE),
+    aditional_information   VARCHAR2(200 BYTE),
+    CONSTRAINT primarykeyimpound PRIMARY KEY ( impound_number ),
+    CONSTRAINT foreignkeyimpound FOREIGN KEY ( animal_id )
+     REFERENCES animal
+);
+commit;
+
+DELETE FROM project2_temporary_table
+WHERE
+    intake_date IN (
+        SELECT
+            intake_date
+        FROM
+            (
+                SELECT
+                    impound_number,
+                    intake_date,
+                    ROW_NUMBER() OVER(
+                        PARTITION BY impound_number
+                        ORDER BY
+                            intake_date
+                    ) AS rank
+                FROM
+                    project2_temporary_table
+            )
+        WHERE
+            rank > 1
+    );   
+commit;    
+
+INSERT INTO project2_temporary_table (
+    animal_id,
+    animal_type,
+    animal_breed,
+    kennel_number,
+    kennel_status,
+    activity_number,
+    activity_sequence,
+    source_id,
+    census_tract,
+    council_district,
+    intake_type,
+    intake_subtype,
+    reason,
+    staff_id,
+    intake_date,
+    intake_time,
+    due_out,
+    intake_condition,
+    hold_request,
+    outcome_type,
+    outcome_subtype,
+    outcome_date,
+    outcome_time,
+    receipt_number,
+    impound_number,
+    outcome_condition,
+    chip_status,
+    animal_origin,
+    additional_information
+)
+    ( SELECT DISTINCT
+        animal_id,
+        animal_type,
+        animal_breed,
+        kennel_number,
+        kennel_status,
+        activity_number,
+        activity_sequence,
+        source_id,
+        census_tract,
+        council_district,
+        intake_type,
+        intake_subtype,
+        reason,
+        staff_id,
+        intake_date,
+        intake_time,
+        due_out,
+        intake_condition,
+        hold_request,
+        outcome_type,
+        outcome_subtype,
+        nvl(outcome_date, '01/01/1969'),
+        outcome_time,
+        receipt_number,
+        impound_number,
+        outcome_condition,
+        chip_status,
+        animal_origin,
+        additional_information
+    FROM
+        project2.project2_data
+    );
+commit;
+
+
+INSERT INTO project2_source_data (
+    animal_id,
+    animal_type,
+    animal_breed,
+    kennel_number,
+    kennel_status,
+    activity_number,
+    activity_sequence,
+    source_id,
+    census_tract,
+    council_district,
+    intake_type,
+    intake_subtype,
+    reason,
+    staff_id,
+    intake_date,
+    intake_time,
+    due_out,
+    intake_condition,
+    hold_request,
+    outcome_type,
+    outcome_subtype,
+    outcome_date,
+    outcome_time,
+    receipt_number,
+    impound_number,
+    outcome_condition,
+    chip_status,
+    animal_origin,
+    additional_information
+)
+    ( SELECT DISTINCT
+        animal_id,
+        animal_type,
+        animal_breed,
+        kennel_number,
+        kennel_status,
+        activity_number,
+        activity_sequence,
+        source_id,
+        census_tract,
+        council_district,
+        intake_type,
+        intake_subtype,
+        reason,
+        staff_id,
+        trunc(to_date(SUBSTR(intake_date, 1, 10),'MM/DD/YYYY')),
+        intake_time,
+        trunc(to_date(SUBSTR(due_out, 1, 10),'MM/DD/YYYY')),
+        intake_condition,
+        hold_request,
+        outcome_type,
+        outcome_subtype,
+        trunc(to_date(SUBSTR(outcome_date, 1, 10),'MM/DD/YYYY')),
+        outcome_time,
+        receipt_number,
+        impound_number,
+        outcome_condition,
+        chip_status,
+        animal_origin,
+        additional_information
+    FROM
+        project2_temporary_table
+    );
+commit;
+
+CREATE TABLE ANIMAL_TEMPORARY_TABLE (
+    animal_id      VARCHAR(12),
+    animal_type    VARCHAR(20),
+    animal_breed   VARCHAR(15),
+    RANKOD            INT
+);
+commit;
+
+INSERT INTO ANIMAL_TEMPORARY_TABLE
+    SELECT
+        animal_id,
+        animal_type,
+        animal_breed,
+        ROW_NUMBER() OVER(
+            PARTITION BY animal_id
+            ORDER BY
+                animal_breed
+        ) AS RANKOD
+    FROM
+        project2_source_data;
+commit;        
+
+INSERT INTO ANIMAL (
+    animal_id,
+    animal_type,
+    animal_breed
+)
+    ( SELECT DISTINCT
+        animal_id,
+        animal_type,
+        animal_breed
+    FROM
+        ANIMAL_TEMPORARY_TABLE
+    WHERE
+        RANKOD = 1
+    );
+commit;  
+
+
+    INSERT INTO IMPOUND_DATA_PROJECT2 (
+    animal_id,
+    kennel_number,
+    kennel_status,
+    activity_number,
+    activity_sequence,
+    source_id,
+    census_tract,
+    council_district,
+    intake_type,
+    intake_subtype,
+    reason,
+    staff_id,
+    intake_date,
+    intake_time,
+    due_out,
+    intake_condition,
+    hold_request,
+    outcome_type,
+    outcome_subtype,
+    outcome_date,
+    outcome_time,
+    receipt_number,
+    impound_number,
+    outcome_condition,
+    chip_status,
+    animal_origin,
+    aditional_information
+)
+    ( SELECT DISTINCT
+        animal_id,
+        kennel_number,
+        kennel_status,
+        activity_number,
+        activity_sequence,
+        source_id,
+        census_tract,
+        council_district,
+        intake_type,
+        intake_subtype,
+        reason,
+        staff_id,
+        intake_date,
+        intake_time,
+        due_out,
+        intake_condition,
+        hold_request,
+        outcome_type,
+        outcome_subtype,
+        outcome_date,
+        outcome_time,
+        receipt_number,
+        impound_number,
+        outcome_condition,
+        chip_status,
+        animal_origin,
+        additional_information
+    FROM
+        project2_source_data
+    );
+commit;
+
+REPORT 1::
+
+SELECT
+    type,
+    breed,
+    breed_survived
+    || ''
+    || '%' AS percentage,
+    survived_count,
+    year
+FROM
+    (
+        SELECT
+            type,
+            breed,
+            year,
+            survived_count,
+            breed_survived,
+            RANK() OVER(
+                PARTITION BY type, year
+                ORDER BY
+                    breed_survived DESC
+            ) AS rank
+        FROM
+            (
+                SELECT
+                    x.type             AS type,
+                    x.breed            AS breed,
+                    x.year             AS year,
+                    x.survived_count   AS survived_count,
+                    y.total_count,
+                    round((x.survived_count / y.total_count) * 100, 2) AS breed_survived
+                FROM
+                    (
+                        SELECT
+                            a.animal_type    AS type,
+                            a.animal_breed   AS breed,
+                            COUNT(a.animal_id) AS survived_count,
+                            EXTRACT(YEAR FROM b.intake_date) AS year
+                        FROM
+                            ANIMAL    a,
+                            IMPOUND_DATA_PROJECT2   b
+                        WHERE
+                            a.animal_id = b.animal_id
+                            AND a.animal_type IN (
+                                'CAT',
+                                'DOG'
+                            )
+                            AND to_char(b.intake_date, 'YYYY') > '2016'
+                            AND to_char(b.intake_date, 'YYYY') < '2021'
+                            AND b.outcome_type NOT IN (
+                                'DIED',
+                                'DEAD ON ARRIVAL',
+                                'EUTHANIZED',
+                                'DISPOSAL',
+                                'MISSING',
+                                'OTHER'
+                            )
+                        GROUP BY
+                            a.animal_type,
+                            a.animal_breed,
+                            EXTRACT(YEAR FROM b.intake_date)
+                        HAVING
+                            COUNT(a.animal_id) > 200
+                    ) x,
+                    (
+                        SELECT
+                            a.animal_type    AS type,
+                            a.animal_breed   AS breed,
+                            COUNT(a.animal_id) AS total_count,
+                            EXTRACT(YEAR FROM b.intake_date) AS year
+                        FROM
+                            ANIMAL    a,
+                            IMPOUND_DATA_PROJECT2   b
+                        WHERE
+                            a.animal_id = b.animal_id
+                            AND a.animal_type IN (
+                                'CAT',
+                                'DOG'
+                            )
+                            AND to_char(b.intake_date, 'YYYY') > '2016'
+                            AND to_char(b.intake_date, 'YYYY') < '2021'
+                        GROUP BY
+                            a.animal_type,
+                            a.animal_breed,
+                            EXTRACT(YEAR FROM b.intake_date)
+                        HAVING
+                            COUNT(a.animal_id) > 200
+                    ) y
+                WHERE
+                    x.type = y.type
+                    AND x.breed = y.breed
+                    AND x.year = y.year
+                ORDER BY
+                    x.year
+            )
+        ORDER BY
+            rank,
+            year
+    )
+WHERE
+    rank = 1
+ORDER BY
+    year,
+    type;
+    
+    commit;
